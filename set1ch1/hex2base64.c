@@ -1,59 +1,13 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include "../utils/hexutils.h"
+#include "../utils/bits.h"
 
 const int CHAR_SIZE = sizeof(char);
 const int LONG_SIZE = sizeof(long);
-const char HEX_LOOKUP[] = "0123456789abcdef";
 const char BASE64_LOOKUP[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-int hex_to_int(char hex_char) {
-    const char *loc = strchr(HEX_LOOKUP, hex_char);
-    if (loc) {
-        return loc - HEX_LOOKUP;
-    }
-
-    return -1;
-}
-
-char convert_two_hex_chars_to_eight_bits(char hex_char1, char hex_char2) {
-    char c = (hex_to_int(hex_char1) << 4) | (hex_to_int(hex_char2));
-    return c;
-}
-
-void print_bits(char read_buffer[], int bytes_to_read) {
-    int i;
-    int bit;
-    char char_to_print;
-
-    printf("bytes to read: %d. Printing in big-endian format.\n", bytes_to_read);
-
-    for (i = 0; i < bytes_to_read; i++) {
-        char_to_print = read_buffer[i];
-
-        for (bit = 7; bit >= 0; bit--) {
-            printf("bit #%d: %d\n", bit, char_to_print >> bit & 1);
-        }
-        printf("\n");
-    }
-}
-
-void validate_hex_str(char *hex_string) {
-    int len = strlen(hex_string);
-    if (len % 2 != 0) {
-        printf("Hexadecimal string must have an even number of characters.\n");
-        exit(1);
-    }
-
-    int i;
-    for (i = 0; i < len; i++) {
-        char c = *(hex_string + i);
-        if (strchr(HEX_LOOKUP, c) == NULL) {
-            printf("Input hex string contains invalid char '%c'\n", c);
-            exit(1);
-        }
-    }
-}
 
 int main(int argc, char *argv[]) {
     char *hex_string = argv[1];
@@ -82,17 +36,10 @@ int main(int argc, char *argv[]) {
 
     char buffer[buffer_size];
 
-    char *hex_char;
-    int i = 0;
-    for (hex_char = hex_string; *hex_char != '\0'; hex_char += 2) {
-        buffer[i] = convert_two_hex_chars_to_eight_bits(*hex_char, *(hex_char + 1));
-        i++;
-        if (*(hex_char + 1) == '\0') {
-            break;
-        }
-    }
+    fill_buffer_with_bits_from_hex_string(buffer, hex_string);
     /* print_bits(buffer, 3); */
 
+    int i;
     for (i = 0; i < buffer_size / 3; i++) {
         char c = *(buffer + i);
         // There are four base64 chars per 3 bytes
